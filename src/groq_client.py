@@ -60,10 +60,11 @@ def resolve_max_tokens(model_name: str, requested_max_tokens: int) -> int:
 
 def get_groq_client(api_key: str | None = None) -> Groq:
     """Build a Groq client or fail clearly if GROQ_API_KEY is missing."""
-    key = (api_key if api_key is not None else config.GROQ_API_KEY).strip()
+    raw = api_key if api_key is not None else config.GROQ_API_KEY
+    key = config.clean_env_secret(raw)
     if not key or key == "your_groq_api_key_here":
         raise GroqServiceError(
-            "Groq API key is missing. Set a valid GROQ_API_KEY in .env to use Movie Buddy.",
+            "Groq API key is missing. Set GROQ_API_KEY in .env (local) or Render Environment Variables.",
             status_code=None,
         )
     return Groq(api_key=key, timeout=20.0, max_retries=0)
@@ -117,7 +118,7 @@ def call_groq_json(
             exc,
         )
         raise GroqServiceError(
-            f"Groq authentication failed (HTTP {sc}). Check GROQ_API_KEY in .env.",
+            f"Groq authentication failed (HTTP {sc}). Check that GROQ_API_KEY is valid in .env (local) or Render Environment Variables.",
             status_code=sc,
         ) from exc
     except groq.RateLimitError as exc:

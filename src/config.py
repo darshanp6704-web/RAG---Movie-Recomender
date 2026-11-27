@@ -48,8 +48,18 @@ PROCESSED_DOCUMENTS_JSON_PATH: Path = DATA_DIR / "processed" / "documents.json"
 CHROMA_COLLECTION: str = "movie_buddy_titles"
 EMBEDDING_MODEL: str = "BAAI/bge-small-en-v1.5"
 
-GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+def clean_env_secret(raw: str | None) -> str:
+    """Normalize an API key pasted with quotes, whitespace, or accidental prefixes."""
+    val = (raw or "").strip().strip('"').strip("'")
+    if val.startswith("GROQ_API_KEY="):
+        val = val.split("=", 1)[1].strip().strip('"').strip("'")
+    if val.lower().startswith("bearer "):
+        val = val[7:].strip()
+    return val
+
+
+GROQ_API_KEY: str = clean_env_secret(os.getenv("GROQ_API_KEY", ""))
+GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
 GROQ_MAX_TOKENS: int = max(1024, int(os.getenv("GROQ_MAX_TOKENS", "2048")))
 
 MAX_PICKS: int = 5

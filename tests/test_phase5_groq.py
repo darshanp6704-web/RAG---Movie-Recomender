@@ -51,6 +51,13 @@ def test_groq_error_raises_clearly_with_no_silent_fallback(caplog) -> None:
     assert any("status=429" in rec.message for rec in caplog.records)
 
 
+def test_clean_env_secret_handles_quotes_and_prefixes() -> None:
+    """Verify accidental quotes, spaces, or prefixes pasted into Render env vars are stripped."""
+    assert config.clean_env_secret('  "gsk_abc123"  ') == "gsk_abc123"
+    assert config.clean_env_secret("GROQ_API_KEY=gsk_abc123") == "gsk_abc123"
+    assert config.clean_env_secret("Bearer gsk_abc123") == "gsk_abc123"
+
+
 def test_missing_api_key_raises_clearly() -> None:
     """Verify missing GROQ_API_KEY fails loudly instead of silently using offline fallback."""
     orig = config.GROQ_API_KEY

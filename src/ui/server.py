@@ -67,8 +67,9 @@ async def health_check() -> dict[str, Any]:
             collection_count = get_cached_collection().count()
         except Exception:
             chroma_ok = False
+    cleaned_key = config.clean_env_secret(config.GROQ_API_KEY)
     groq_configured = bool(
-        config.GROQ_API_KEY and config.GROQ_API_KEY != "your_groq_api_key_here"
+        cleaned_key and cleaned_key != "your_groq_api_key_here"
     )
     status = "ok" if (sqlite_ok and chroma_ok and collection_count > 0) else "degraded"
     return {
@@ -78,6 +79,7 @@ async def health_check() -> dict[str, Any]:
         "titles_indexed": collection_count,
         "embedder_loaded": is_embedder_loaded(),
         "groq_configured": groq_configured,
+        "groq_key_format_ok": cleaned_key.startswith("gsk_"),
         "model": config.GROQ_MODEL,
     }
 
