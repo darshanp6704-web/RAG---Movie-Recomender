@@ -13,6 +13,7 @@ from src.retriever import (
     CANONICAL_LANGUAGES,
     QueryFilters,
     QuerySpec,
+    _extract_languages,
     normalize_language,
     normalize_platform,
 )
@@ -88,7 +89,7 @@ Canonical rules:
 - genres: from [Action,Adventure,Animation,Comedy,Crime,Documentary,Drama,Family,Fantasy,History,Horror,Kids,Music,Mystery,Romance,Science Fiction,Sci-Fi & Fantasy,Thriller,War,Western].
 - moods: [Chilling,Comforting,Dark,Epic,Feel good,Funny,Heartbreaking,Hopeful,Mind bending,Nostalgic,Romantic,Tense,Thought provoking].
 - avoid_content_notes: [Violence,Gore,Sexual content,Drugs,Suicide or self harm,Adults only (A)].
-- more_like: set mode="more_like", anchor_title="<title>". Put language/year identifying ONLY the anchor (e.g. "Malayalam Drishyam") into anchor_language/anchor_year, leaving filters.languages=[].
+- more_like: set mode="more_like", anchor_title="<title>". ONLY set anchor_language or anchor_year if the user EXPLICITLY wrote a language or year in <user_query> (never guess or infer it from memory!). Leave filters.languages=[] unless restricting recommendations.
 
 Examples:
 1. "light Kannada or Hindi film under 2 hours, free to watch" -> {"mode":"vibe_search","semantic_query":"lighthearted feel good easy watch","anchor_title":null,"anchor_language":null,"anchor_year":null,"sort_preference":"relevance","filters":{"type":"Movie","languages":["Kannada","Hindi"],"max_runtime_min":119,"free_to_watch":true,"intensity":"Light"}}
@@ -159,12 +160,18 @@ def _sanitize_parsed_payload(raw_query: str, data: dict[str, Any]) -> QuerySpec:
         ww_val = str(raw_filters["watch_with"]).strip().title()
         raw_filters["watch_with"] = ww_val if ww_val in ("Alone", "Friends", "Family", "Date") else None
 
-    # Anchor language normalization
+    # Anchor language & year: only honor if user explicitly mentioned them in raw_query
+    explicit_langs = set(_extract_languages(raw_query.lower()))
     anchor_lang = data.get("anchor_language")
     if anchor_lang:
-        anchor_lang = normalize_language(str(anchor_lang)) or (
+        norm_anchor_lang = normalize_language(str(anchor_lang)) or (
             str(anchor_lang) if str(anchor_lang) in CANONICAL_LANGUAGES else None
         )
+        anchor_lang = norm_anchor_lang if norm_anchor_lang in explicit_langs else None
+
+    anchor_year = int(data["anchor_year"]) if data.get("anchor_year") else None
+    if anchor_year and str(anchor_year) not in raw_query:
+        anchor_year = None
 
     # Strip None values so Pydantic list fields fall back cleanly to []
     cleaned_filter_dict = {k: v for k, v in raw_filters.items() if v is not None}
@@ -183,7 +190,7 @@ def _sanitize_parsed_payload(raw_query: str, data: dict[str, Any]) -> QuerySpec:
         semantic_query=str(data.get("semantic_query") or raw_query).strip(),
         anchor_title=(str(data["anchor_title"]).strip() if data.get("anchor_title") else None),
         anchor_language=anchor_lang,
-        anchor_year=(int(data["anchor_year"]) if data.get("anchor_year") else None),
+        anchor_year=anchor_year,
         filters=filters,
         sort_preference=sort_pref,
     )

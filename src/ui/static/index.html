@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Movie Buddy — Vibe-Based Movie &amp; Series Finder for India</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23111318'/%3E%3Cpath d='M8 10h16v12H8z' fill='none' stroke='%23ffc174' stroke-width='2.2'/%3E%3Cpath d='M13 13l7 3-7 3z' fill='%23ffc174'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -114,7 +115,7 @@
       <div class="absolute -right-8 -top-8 w-36 h-36 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
       <div class="flex items-start gap-3 relative z-10">
         <div class="w-10 h-10 rounded-xl bg-primary-container/20 flex items-center justify-center shrink-0">
-          <span class="material-symbols-outlined text-primary text-[22px]">chat_spark</span>
+          <span class="material-symbols-outlined text-primary text-[22px]">forum</span>
         </div>
         <div class="min-w-0">
           <h1 class="text-[17px] font-bold tracking-tight text-on-surface">Namaste! I'm Movie Buddy</h1>
@@ -240,6 +241,22 @@
         .replace(/'/g, "&#39;");
     }
 
+    function formatRichText(value) {
+      let safe = escapeHtml(value);
+      safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong class="text-on-surface font-semibold">$1</strong>');
+      safe = safe.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      return safe;
+    }
+
+    function scrollToBottom() {
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: "smooth"
+        });
+      });
+    }
+
     function openFilterModal() {
       filterModal.style.display = "flex";
     }
@@ -338,13 +355,10 @@
                   <h2 class="text-[16px] font-bold text-on-surface leading-snug break-words">${escapeHtml(card.title)}</h2>
                   <span class="shrink-0 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider ${certClass}">${cert}</span>
                 </div>
-                <div class="flex flex-wrap items-center gap-1.5 mt-1.5 text-[12px] tabular-nums">
+                <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1.5 text-[12px] tabular-nums">
                   <span class="px-2 py-0.5 rounded-full bg-surface-container-low text-primary text-[11px] font-semibold">${escapeHtml(card.language || "Unknown")}</span>
-                  <span class="text-outline">•</span>
                   <span class="text-outline">${escapeHtml(card.release_year || "N/A")}</span>
-                  <span class="text-outline">•</span>
                   <span class="text-outline">${escapeHtml(durationText)}</span>
-                  <span class="text-outline">•</span>
                   <span class="px-1.5 py-0.5 rounded text-[11px] ${typeBadgeClass}">${escapeHtml(card.type)}</span>
                 </div>
                 ${chipsHtml ? `<div class="flex flex-wrap gap-1.5 mt-2.5">${chipsHtml}</div>` : ""}
@@ -357,7 +371,7 @@
             <div class="flex items-start gap-1.5">
               <span class="material-symbols-outlined text-primary text-[15px] shrink-0 mt-0.5">auto_awesome</span>
               <p class="text-[12.5px] text-outline leading-snug">
-                <strong class="text-on-surface font-semibold">Why it matches:</strong> ${escapeHtml(card.why_it_matches)}
+                <strong class="text-on-surface font-semibold">Why it matches:</strong> ${formatRichText(card.why_it_matches)}
               </p>
             </div>
           </div>
@@ -384,7 +398,7 @@
         </div>
       `;
       chatStream.appendChild(wrap);
-      wrap.scrollIntoView({ behavior: "smooth", block: "end" });
+      scrollToBottom();
     }
 
     function appendLoadingBubble() {
@@ -402,7 +416,7 @@
         </div>
       `;
       chatStream.appendChild(el);
-      el.scrollIntoView({ behavior: "smooth", block: "end" });
+      scrollToBottom();
       return el;
     }
 
@@ -443,7 +457,7 @@
           <div class="w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center shrink-0 mt-0.5">
             <span class="material-symbols-outlined text-[16px]">${iconName}</span>
           </div>
-          <p class="text-[14px] leading-relaxed ${isError ? "text-error font-semibold" : "text-on-surface"}">${escapeHtml(data.message || "")}</p>
+          <p class="text-[14px] leading-relaxed ${isError ? "text-error font-semibold" : "text-on-surface"}">${formatRichText(data.message || "")}</p>
         </div>
         ${extraHtml}
         ${cardsHtml}
@@ -455,7 +469,7 @@
           sendQuery(btn.getAttribute("data-followup") || "");
         });
       });
-      wrap.scrollIntoView({ behavior: "smooth", block: "end" });
+      scrollToBottom();
     }
 
     async function sendQuery(rawText) {

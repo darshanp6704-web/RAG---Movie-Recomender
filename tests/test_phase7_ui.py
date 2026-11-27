@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from src import config
 from src.groq_client import GroqServiceError
+from src.query_parser import _sanitize_parsed_payload
 from src.responder import PickCard, RecommendationResponse
 from src.retriever import WatchOption
 from src.ui.server import app
@@ -24,6 +25,11 @@ def test_index_html_contains_stitch_theme_prompts_footer_and_display_none_modal(
     assert "#f59e0b" in html
     assert "Plus Jakarta Sans" in html
 
+    # Valid Material icon & favicon & smooth bottom scroll
+    assert "chat_spark" not in html
+    assert 'rel="icon"' in html
+    assert "window.scrollTo" in html
+
     # Welcome, 4 example prompts, mandatory verbatim footer, and POST /api/chat wiring
     assert "Namaste! I'm Movie Buddy" in html
     assert html.count('class="example-prompt') == 4
@@ -32,6 +38,33 @@ def test_index_html_contains_stitch_theme_prompts_footer_and_display_none_modal(
 
     # Closed modal uses display: none so it never blocks clicks
     assert 'id="filter-modal" style="display: none;"' in html
+
+
+def test_parser_does_not_infer_unmentioned_anchor_language_or_year() -> None:
+    """Verify 'more like Drishyam' triggers disambiguation even if LLM guesses Malayalam/2013."""
+    spec = _sanitize_parsed_payload(
+        "more like Drishyam",
+        {
+            "mode": "more_like",
+            "anchor_title": "Drishyam",
+            "anchor_language": "Malayalam",
+            "anchor_year": 2013,
+            "filters": {},
+        },
+    )
+    assert spec.anchor_language is None
+    assert spec.anchor_year is None
+
+    spec_explicit = _sanitize_parsed_payload(
+        "more like Malayalam Drishyam",
+        {
+            "mode": "more_like",
+            "anchor_title": "Drishyam",
+            "anchor_language": "Malayalam",
+            "filters": {},
+        },
+    )
+    assert spec_explicit.anchor_language == "Malayalam"
 
 
 def test_health_endpoint() -> None:
