@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -14,7 +15,7 @@ from pydantic import BaseModel, Field
 from src import config
 from src.groq_client import GroqServiceError
 from src.responder import RecommendationResponse, recommend
-from src.retriever import get_cached_collection, get_cached_embedder
+from src.retriever import get_cached_collection, is_embedder_loaded
 
 STATIC_DIR: Path = Path(__file__).resolve().parent / "static"
 INDEX_HTML_PATH: Path = STATIC_DIR / "index.html"
@@ -36,10 +37,7 @@ class ChatRequest(BaseModel):
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Pre-warm FastEmbed ONNX model and ChromaDB client once at startup."""
-    if config.CHROMA_DIR.exists():
-        get_cached_embedder()
-        get_cached_collection()
+    """Bind immediately on 0.0.0.0:$PORT; load FastEmbed lazily on first request."""
     yield
 
 
@@ -78,6 +76,7 @@ async def health_check() -> dict[str, Any]:
         "sqlite_ready": sqlite_ok,
         "chroma_ready": chroma_ok,
         "titles_indexed": collection_count,
+        "embedder_loaded": is_embedder_loaded(),
         "groq_configured": groq_configured,
         "model": config.GROQ_MODEL,
     }
@@ -114,3 +113,10 @@ async def chat_endpoint(payload: ChatRequest) -> JSONResponse | RecommendationRe
             picks=[],
         )
         return JSONResponse(status_code=http_status, content=err_resp.model_dump())
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run("src.ui.server:app", host="0.0.0.0", port=port, workers=1)

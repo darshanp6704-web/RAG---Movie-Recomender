@@ -40,7 +40,7 @@ def test_gitignore_excludes_secrets_and_venv() -> None:
 
 
 def test_no_forbidden_heavy_packages_installed() -> None:
-    """Verify torch and sentence-transformers are absent to respect 512 MB RAM cap."""
+    """Verify torch, sentence-transformers, and nvidia packages are absent for 512 MB RAM."""
     installed = {
         dist.metadata["Name"].lower()
         for dist in importlib.metadata.distributions()
@@ -48,6 +48,7 @@ def test_no_forbidden_heavy_packages_installed() -> None:
     }
     assert "torch" not in installed
     assert "sentence-transformers" not in installed
+    assert not any(name.startswith("nvidia") for name in installed)
 
 
 def test_core_dependencies_importable() -> None:

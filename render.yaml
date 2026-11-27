@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: movie-buddy
+    runtime: python
+    plan: free
+    buildCommand: pip install --no-cache-dir -r requirements.txt
+    startCommand: uvicorn src.ui.server:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.18
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-20b
+      - key: GROQ_MAX_TOKENS
+        value: "2048"
+      - key: GROQ_API_KEY
+        sync: false

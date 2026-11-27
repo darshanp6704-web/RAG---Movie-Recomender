@@ -8,6 +8,7 @@ import itertools
 import json
 import re
 import sqlite3
+import threading
 import time
 from functools import lru_cache
 from pathlib import Path
@@ -509,17 +510,36 @@ def parse_query_rule_based(user_query: str) -> QuerySpec:
     )
 
 
+_EMBEDDER_LOCK = threading.Lock()
+_COLLECTION_LOCK = threading.Lock()
+
+
 @lru_cache(maxsize=1)
-def get_cached_embedder():
-    """Load FastEmbed ONNX model once per process."""
+def _load_embedder_singleton():
     return get_embedder()
 
 
+def get_cached_embedder():
+    """Lazily load FastEmbed ONNX model once per process (thread-safe)."""
+    with _EMBEDDER_LOCK:
+        return _load_embedder_singleton()
+
+
+def is_embedder_loaded() -> bool:
+    """Return True if the lazy FastEmbed singleton has been initialized."""
+    return _load_embedder_singleton.cache_info().currsize > 0
+
+
 @lru_cache(maxsize=1)
-def get_cached_collection():
-    """Open persistent ChromaDB collection once per process."""
+def _load_collection_singleton():
     client = get_chroma_client(config.CHROMA_DIR)
     return client.get_collection(name=config.CHROMA_COLLECTION)
+
+
+def get_cached_collection():
+    """Open persistent ChromaDB collection once per process (thread-safe)."""
+    with _COLLECTION_LOCK:
+        return _load_collection_singleton()
 
 
 def _open_sqlite(db_path: Path | None = None) -> sqlite3.Connection:
@@ -1024,7 +1044,6 @@ def retrieve(
         if isinstance(query_or_spec, str)
         else query_or_spec
     )
-    emb = embedder or get_cached_embedder()
     col = collection or get_cached_collection()
     conn = _open_sqlite(db_path)
 
@@ -1121,6 +1140,7 @@ def retrieve(
         # 3. Rank candidates
         if spec.mode == "more_like":
             if anchor_embedding is None:
+                emb = embedder or get_cached_embedder()
                 q_text = f"movies and series similar to {spec.anchor_title or spec.raw_query}"
                 anchor_embedding = next(emb.embed([q_text])).tolist()
             ranked = _vector_rank_candidates(
@@ -1152,6 +1172,7 @@ def retrieve(
             scored_rows.sort(key=lambda x: (x[2], x[3]), reverse=True)
             ranked_tuples = [(tid, sim, sc) for tid, sim, sc, _ in scored_rows[:max_picks]]
         else:
+            emb = embedder or get_cached_embedder()
             q_vec = next(emb.embed([spec.semantic_query])).tolist()
             ranked = _vector_rank_candidates(
                 query_embedding=q_vec,
