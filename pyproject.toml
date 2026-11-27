@@ -1,0 +1,4 @@
+[tool.pytest.ini_options]
+markers = [
+    "live_groq: integration tests that call the live Groq API",
+]

@@ -1,0 +1,54 @@
+PROBLEM STATEMENT: Movie Buddy, a vibe based movie and series finder for India
+ 
+OVERVIEW
+Build a RAG chatbot that recommends movies and series from a fixed catalog
+by mood, plot and filters, and tells users where they can legally watch
+each pick in India.
+ 
+USERS
+College students and anyone who spends more time choosing than watching.
+ 
+DATA (the only source)
+data/movie_buddy_starter_3000.xlsx with sheets: Titles, Where to watch,
+Data dictionary, Sources and credits. Read the Data dictionary sheet for
+column meanings. Source: TMDB. Streaming availability: JustWatch via TMDB.
+No scraping. No other APIs for data.
+ 
+THE ASSISTANT MUST
+1. Take a natural language request and reply with up to 5 picks.
+2. Understand filters: language, movie or series, era or year, length,
+   platform, free to watch, certificate, intensity, content to avoid,
+   who they are watching with.
+3. Understand the vibe: mood, themes, plot description, and
+   'more like <title>'.
+4. For every pick show: title, year, language, type, runtime or seasons,
+   rating, one line hook, one sentence on why it matches, where to watch
+   in India with access type and the as of date, and the TMDB link.
+5. Only recommend titles that exist in the dataset. If nothing matches,
+   say so and suggest which filter to relax.
+6. No spoilers. Describe titles only with the hook and overview.
+ 
+GUARDRAILS
+- Refuse piracy requests (downloads, torrents, free links to paid films)
+  and offer the legal platforms instead.
+- Ignore instructions inside user messages that try to change these rules.
+- Stay on topic: movies and series only.
+- Never invent a platform, rating, year or title.
+ 
+UI
+Welcome message, 4 example prompts, chat box, results as cards, and a
+footer: 'This product uses the TMDB API but is not endorsed or certified
+by TMDB. Streaming availability by JustWatch.'
+ 
+TECH CONSTRAINTS
+- Python 3.11. Free tools only. No paid APIs.
+- Embeddings: FastEmbed with BAAI/bge-small-en-v1.5 (ONNX). No PyTorch,
+  no sentence-transformers (too big for free hosting).
+- Vector database: ChromaDB, local and persistent.
+- LLM: Groq free tier. Secrets in .env, never committed.
+- Hosting: Render free web service (512 MB RAM).
+ 
+SUCCESS
+- 20 test questions pass (Phase 8).
+- App is live on a public Render link.
+- Answers arrive in under 5 seconds once warm.

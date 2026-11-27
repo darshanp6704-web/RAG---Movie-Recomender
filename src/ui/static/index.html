@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Movie Buddy — Vibe-Based Movie &amp; Series Finder for India</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface": "#111318",
+            "surface-dim": "#111318",
+            "surface-bright": "#37393f",
+            "surface-container-lowest": "#0c0e13",
+            "surface-container-low": "#1a1b21",
+            "surface-container": "#1e1f25",
+            "surface-container-high": "#282a2f",
+            "surface-container-highest": "#33353a",
+            "on-surface": "#e2e2e9",
+            "on-surface-variant": "#d8c3ad",
+            "outline": "#a08e7a",
+            "outline-variant": "#534434",
+            "primary": "#ffc174",
+            "on-primary": "#472a00",
+            "primary-container": "#f59e0b",
+            "on-primary-container": "#613b00",
+            "secondary": "#c0c1ff",
+            "on-secondary": "#1000a9",
+            "secondary-container": "#3131c0",
+            "on-secondary-container": "#b0b2ff",
+            "tertiary": "#56e5a9",
+            "on-tertiary": "#003824",
+            "tertiary-container": "#30c88f",
+            "on-tertiary-container": "#004e34",
+            "error": "#ffb4ab",
+            "on-error": "#690005",
+            "error-container": "#93000a",
+            "on-error-container": "#ffdad6",
+            "background": "#111318",
+            "on-background": "#e2e2e9"
+          },
+          fontFamily: {
+            sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    @layer base {
+      html, body {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #111318;
+        color: #e2e2e9;
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+      }
+      body {
+        overscroll-behavior-y: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+    }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .typing-dot {
+      animation: bounceDot 1.2s infinite ease-in-out;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes bounceDot {
+      0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+      40% { opacity: 1; transform: translateY(-3px); }
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
+
+  <!-- Minimal Chat Header -->
+  <header class="sticky top-0 w-full z-40 pt-safe bg-surface-container-lowest/90 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_4px_20px_rgba(0,0,0,0.45)]">
+    <div class="max-w-[880px] mx-auto h-16 px-4 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-primary-container/20 border border-primary/25 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-primary text-[22px]">movie_filter</span>
+        </div>
+        <div class="flex flex-col min-w-0">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[16px] font-bold tracking-tight text-on-surface truncate">Movie Buddy</span>
+            <span class="material-symbols-outlined text-primary text-[14px] shrink-0">auto_awesome</span>
+          </div>
+          <p class="text-[11px] font-semibold text-outline truncate">Vibe-based movie &amp; series finder for India</p>
+        </div>
+      </div>
+      <button id="new-chat-btn" type="button"
+        class="h-10 px-3.5 rounded-full bg-surface-container-low border border-outline-variant/40 text-on-surface text-[12px] font-semibold flex items-center gap-1.5 hover:bg-surface-container transition-colors shrink-0">
+        <span class="material-symbols-outlined text-primary text-[17px]">refresh</span>
+        <span>New Chat</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Chat-First Main Column -->
+  <main class="flex-1 w-full max-w-[880px] mx-auto px-4 pt-5 pb-40 flex flex-col gap-5">
+    <!-- Welcome Card + 4 Example Prompts -->
+    <section id="welcome-card" class="relative rounded-2xl bg-surface-container-low border border-outline-variant/30 p-4 sm:p-5 shadow-xl overflow-hidden">
+      <div class="absolute -right-8 -top-8 w-36 h-36 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="flex items-start gap-3 relative z-10">
+        <div class="w-10 h-10 rounded-xl bg-primary-container/20 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-primary text-[22px]">chat_spark</span>
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-[17px] font-bold tracking-tight text-on-surface">Namaste! I'm Movie Buddy</h1>
+          <p class="text-[14px] text-outline mt-1 leading-relaxed">
+            Tell me your mood, plot vibe, language, runtime, or a title like <span class="text-on-surface font-semibold">"more like Kantara"</span>. I pick up to 5 spoiler-free titles from our Indian catalog and show where to legally watch each one.
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-outline-variant/25 flex flex-col gap-2 relative z-10">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-outline flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[13px] text-primary">tips_and_updates</span>
+          Try asking
+        </span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="example-prompts">
+          <button type="button" data-prompt="Light Kannada or Hindi film under 2 hours, free to watch"
+            class="example-prompt group text-left px-3 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/25 transition-colors flex items-center justify-between gap-2">
+            <span class="text-[12.5px] text-on-surface group-hover:text-primary transition-colors">Light Kannada or Hindi film under 2 hours, free to watch</span>
+            <span class="material-symbols-outlined text-outline group-hover:text-primary text-[15px] shrink-0">north_east</span>
+          </button>
+          <button type="button" data-prompt="Something like Kantara"
+            class="example-prompt group text-left px-3 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/25 transition-colors flex items-center justify-between gap-2">
+            <span class="text-[12.5px] text-on-surface group-hover:text-primary transition-colors">Something like Kantara</span>
+            <span class="material-symbols-outlined text-outline group-hover:text-primary text-[15px] shrink-0">north_east</span>
+          </button>
+          <button type="button" data-prompt="Cozy feel-good movie to watch with family on Netflix"
+            class="example-prompt group text-left px-3 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/25 transition-colors flex items-center justify-between gap-2">
+            <span class="text-[12.5px] text-on-surface group-hover:text-primary transition-colors">Cozy feel-good movie to watch with family on Netflix</span>
+            <span class="material-symbols-outlined text-outline group-hover:text-primary text-[15px] shrink-0">north_east</span>
+          </button>
+          <button type="button" data-prompt="Mind-bending sci-fi series on Prime Video"
+            class="example-prompt group text-left px-3 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/25 transition-colors flex items-center justify-between gap-2">
+            <span class="text-[12.5px] text-on-surface group-hover:text-primary transition-colors">Mind-bending sci-fi series on Prime Video</span>
+            <span class="material-symbols-outlined text-outline group-hover:text-primary text-[15px] shrink-0">north_east</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live Chat Stream -->
+    <div id="chat-stream" class="flex flex-col gap-5" aria-live="polite"></div>
+  </main>
+
+  <!-- Quick-Filter Modal (strictly display: none when closed so it never blocks clicks) -->
+  <div id="filter-modal" style="display: none;" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="filter-modal-title">
+    <div class="w-full max-w-md rounded-2xl bg-surface-container-low border border-outline-variant/50 p-5 shadow-2xl">
+      <div class="flex items-center justify-between gap-2 pb-3 border-b border-outline-variant/30">
+        <h2 id="filter-modal-title" class="text-[15px] font-bold text-on-surface">Append Quick Filters</h2>
+        <button id="close-filter-modal" type="button" class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-outline hover:text-on-surface">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+      <div class="mt-3 flex flex-col gap-3 text-[12px]">
+        <div>
+          <span class="text-outline font-semibold block mb-1.5">Language</span>
+          <div class="flex flex-wrap gap-1.5" data-filter-group="lang">
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="Hindi">Hindi</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="Kannada">Kannada</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="Malayalam">Malayalam</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="Tamil">Tamil</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="Telugu">Telugu</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="Korean">Korean</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="English">English</button>
+          </div>
+        </div>
+        <div>
+          <span class="text-outline font-semibold block mb-1.5">Platform &amp; Access</span>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="on Netflix">Netflix</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="on Prime Video">Prime Video</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="on JioHotstar">JioHotstar</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="free to watch">Free to watch</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="under 2 hours">Under 2 hrs</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary" data-snippet="with family">Family watch</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sticky Bottom Composer + Mandatory Credits Footer -->
+  <div class="fixed bottom-0 inset-x-0 z-40 pb-safe bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/95 to-transparent pt-4">
+    <div class="max-w-[880px] mx-auto px-4 pb-2.5 flex flex-col gap-2">
+      <form id="chat-form" class="rounded-2xl bg-surface-container-high border border-outline-variant/40 p-1.5 shadow-2xl flex items-center gap-1.5 focus-within:border-primary-container transition-colors">
+        <button id="open-filter-modal" type="button" title="Quick filters"
+          class="w-10 h-10 rounded-xl hover:bg-surface-container flex items-center justify-center text-outline hover:text-primary transition-colors shrink-0">
+          <span class="material-symbols-outlined text-[20px]">tune</span>
+        </button>
+        <input id="chat-input" type="text" autocomplete="off"
+          placeholder="Describe your mood, language, plot, or 'more like Kantara'..."
+          class="flex-1 min-w-0 bg-transparent px-2 py-2 text-[14px] text-on-surface placeholder:text-outline focus:outline-none" />
+        <button id="send-btn" type="submit" title="Send"
+          class="w-10 h-10 rounded-xl bg-primary hover:bg-primary-container disabled:opacity-50 text-on-primary font-bold flex items-center justify-center shadow transition-colors shrink-0">
+          <span class="material-symbols-outlined text-[20px]">arrow_upward</span>
+        </button>
+      </form>
+      <footer class="text-center text-[11px] text-outline/90 leading-snug px-2">
+        This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability by JustWatch.
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const chatStream = document.getElementById("chat-stream");
+    const chatForm = document.getElementById("chat-form");
+    const chatInput = document.getElementById("chat-input");
+    const sendBtn = document.getElementById("send-btn");
+    const newChatBtn = document.getElementById("new-chat-btn");
+    const filterModal = document.getElementById("filter-modal");
+    const openFilterBtn = document.getElementById("open-filter-modal");
+    const closeFilterBtn = document.getElementById("close-filter-modal");
+
+    let conversationHistory = [];
+    let isSubmitting = false;
+
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return "";
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function openFilterModal() {
+      filterModal.style.display = "flex";
+    }
+
+    function closeFilterModal() {
+      filterModal.style.display = "none";
+    }
+
+    openFilterBtn.addEventListener("click", openFilterModal);
+    closeFilterBtn.addEventListener("click", closeFilterModal);
+    filterModal.addEventListener("click", (e) => {
+      if (e.target === filterModal) closeFilterModal();
+    });
+    document.querySelectorAll(".quick-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const snippet = btn.getAttribute("data-snippet") || "";
+        const cur = chatInput.value.trim();
+        chatInput.value = cur ? `${cur} ${snippet}` : snippet;
+        closeFilterModal();
+        chatInput.focus();
+      });
+    });
+
+    function platformDotColor(platform, accessType) {
+      const a = (accessType || "").toLowerCase();
+      if (a.includes("free")) return "bg-tertiary";
+      if (a.includes("rent") || a.includes("buy")) return "bg-primary";
+      const p = (platform || "").toLowerCase();
+      if (p.includes("netflix")) return "bg-error";
+      if (p.includes("prime")) return "bg-secondary";
+      return "bg-secondary";
+    }
+
+    function fallbackPosterSvg(title) {
+      const safe = escapeHtml((title || "Movie").slice(0, 22));
+      return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 252"><rect width="168" height="252" fill="#282a2f"/><text x="50%" y="48%" text-anchor="middle" fill="#a08e7a" font-family="sans-serif" font-size="13" font-weight="600">${safe}</text><text x="50%" y="58%" text-anchor="middle" fill="#ffc174" font-family="sans-serif" font-size="11">Movie Buddy</text></svg>`
+      )}`;
+    }
+
+    function renderCard(card) {
+      const posterSrc = card.poster_url ? escapeHtml(card.poster_url) : fallbackPosterSvg(card.title);
+      const fallbackSrc = fallbackPosterSvg(card.title);
+      const ratingBadge = card.rating !== null && card.rating !== undefined ? `★ ${Number(card.rating).toFixed(1)}` : "NR";
+      const cert = escapeHtml(card.certification_in || "Unknown");
+      const certClass = cert === "A"
+        ? "bg-error-container text-on-error-container font-bold"
+        : "bg-surface-container-highest text-on-surface-variant";
+
+      const durationText = card.type === "Series"
+        ? (card.seasons ? `${card.seasons} ${card.seasons === 1 ? "Season" : "Seasons"}` : "Series")
+        : (card.runtime_min ? `${card.runtime_min} min` : "Runtime N/A");
+
+      const moodList = (card.mood || "")
+        .split(",")
+        .map((m) => m.trim())
+        .filter(Boolean)
+        .slice(0, 3);
+      const genreList = moodList.length ? [] : (card.genres || "").split(",").map((g) => g.trim()).filter(Boolean).slice(0, 3);
+      const chips = [...moodList, ...genreList];
+
+      const chipsHtml = chips.map((chip) =>
+        `<span class="px-2 py-0.5 rounded-md bg-surface-container-low text-on-surface-variant text-[11px] font-semibold">${escapeHtml(chip)}</span>`
+      ).join("");
+
+      const watchList = Array.isArray(card.where_to_watch) ? card.where_to_watch : [];
+      const asOfDates = [...new Set(watchList.map((w) => w.as_of).filter(Boolean))];
+      const asOfText = asOfDates.length ? `As of ${escapeHtml(asOfDates[0])}` : "";
+
+      const watchHtml = watchList.map((w) => `
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high border border-outline-variant/25">
+          <span class="w-2 h-2 rounded-full ${platformDotColor(w.platform, w.access_type)} shrink-0"></span>
+          <span class="text-[12px] text-on-surface font-semibold">${escapeHtml(w.platform)}</span>
+          <span class="text-[10.5px] text-outline">${escapeHtml(w.access_type)}</span>
+        </div>
+      `).join("");
+
+      const tmdbLink = card.tmdb_url
+        ? `<a href="${escapeHtml(card.tmdb_url)}" target="_blank" rel="noopener noreferrer" class="text-[12px] font-semibold text-primary hover:underline inline-flex items-center gap-0.5">TMDB <span class="material-symbols-outlined text-[14px]">arrow_outward</span></a>`
+        : "";
+
+      const typeBadgeClass = card.type === "Series"
+        ? "bg-secondary-container/40 text-secondary font-bold"
+        : "bg-surface-container-high text-on-surface-variant font-semibold";
+
+      return `
+        <article class="rounded-xl bg-surface-container border border-outline-variant/30 p-4 shadow-lg">
+          <div class="flex gap-3.5">
+            <div class="relative w-[84px] h-[126px] shrink-0 rounded-lg overflow-hidden bg-surface-container-highest shadow-inner">
+              <img src="${posterSrc}" alt="${escapeHtml(card.title)} poster" onerror="this.onerror=null;this.src='${fallbackSrc}';" class="w-full h-full object-cover" />
+              <div class="absolute top-1 left-1 bg-surface-container-lowest/85 backdrop-blur-sm px-1.5 py-0.5 rounded text-[10px] font-bold text-primary tabular-nums">${ratingBadge}</div>
+            </div>
+            <div class="flex flex-col min-w-0 flex-1 justify-between">
+              <div>
+                <div class="flex items-start justify-between gap-2">
+                  <h2 class="text-[16px] font-bold text-on-surface leading-snug break-words">${escapeHtml(card.title)}</h2>
+                  <span class="shrink-0 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider ${certClass}">${cert}</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-1.5 mt-1.5 text-[12px] tabular-nums">
+                  <span class="px-2 py-0.5 rounded-full bg-surface-container-low text-primary text-[11px] font-semibold">${escapeHtml(card.language || "Unknown")}</span>
+                  <span class="text-outline">•</span>
+                  <span class="text-outline">${escapeHtml(card.release_year || "N/A")}</span>
+                  <span class="text-outline">•</span>
+                  <span class="text-outline">${escapeHtml(durationText)}</span>
+                  <span class="text-outline">•</span>
+                  <span class="px-1.5 py-0.5 rounded text-[11px] ${typeBadgeClass}">${escapeHtml(card.type)}</span>
+                </div>
+                ${chipsHtml ? `<div class="flex flex-wrap gap-1.5 mt-2.5">${chipsHtml}</div>` : ""}
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3.5 bg-surface-container-low/70 rounded-lg p-3 space-y-2 border border-outline-variant/20">
+            ${card.hook ? `<p class="text-[12.5px] text-on-surface italic">"${escapeHtml(card.hook)}"</p>` : ""}
+            <div class="flex items-start gap-1.5">
+              <span class="material-symbols-outlined text-primary text-[15px] shrink-0 mt-0.5">auto_awesome</span>
+              <p class="text-[12.5px] text-outline leading-snug">
+                <strong class="text-on-surface font-semibold">Why it matches:</strong> ${escapeHtml(card.why_it_matches)}
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-3.5 flex flex-wrap items-center justify-between gap-2 pt-1">
+            <div class="flex flex-wrap items-center gap-1.5">
+              ${watchHtml || `<span class="text-[12px] text-outline">No Indian streaming listings</span>`}
+            </div>
+            <div class="flex items-center gap-3 ml-auto tabular-nums">
+              ${asOfText ? `<span class="text-[11px] text-outline">${asOfText}</span>` : ""}
+              ${tmdbLink}
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function appendUserBubble(text) {
+      const wrap = document.createElement("div");
+      wrap.className = "flex justify-end w-full";
+      wrap.innerHTML = `
+        <div class="max-w-[88%] sm:max-w-[78%] rounded-2xl rounded-tr-sm bg-secondary-container/30 border border-secondary/20 text-on-surface px-4 py-3 shadow-md">
+          <p class="text-[14px] leading-relaxed break-words">${escapeHtml(text)}</p>
+        </div>
+      `;
+      chatStream.appendChild(wrap);
+      wrap.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+
+    function appendLoadingBubble() {
+      const el = document.createElement("div");
+      el.className = "flex items-center gap-2.5 text-outline text-[13px]";
+      el.innerHTML = `
+        <div class="w-7 h-7 rounded-lg bg-primary-container flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-on-primary-container text-[16px]">smart_toy</span>
+        </div>
+        <div class="px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/25 flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-primary typing-dot"></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-primary typing-dot"></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-primary typing-dot"></span>
+          <span class="ml-1.5 text-[12px] text-outline">Finding grounded picks in India...</span>
+        </div>
+      `;
+      chatStream.appendChild(el);
+      el.scrollIntoView({ behavior: "smooth", block: "end" });
+      return el;
+    }
+
+    function appendAssistantResponse(data) {
+      const wrap = document.createElement("div");
+      wrap.className = "flex flex-col gap-3.5";
+
+      const isError = data.status === "error";
+      const isBlocked = data.status === "blocked";
+      const iconBg = isError
+        ? "bg-error-container text-on-error-container"
+        : isBlocked
+          ? "bg-tertiary-container/25 text-tertiary"
+          : "bg-primary-container text-on-primary-container";
+      const iconName = isError ? "error" : isBlocked ? "verified_user" : "smart_toy";
+
+      let extraHtml = "";
+
+      if (data.status === "clarification_needed" && Array.isArray(data.disambiguation_options) && data.disambiguation_options.length) {
+        const opts = data.disambiguation_options.map((opt) => {
+          const queryText = `more like ${opt.language || ""} ${opt.title}`.replace(/\s+/g, " ").trim();
+          return `<button type="button" data-followup="${escapeHtml(queryText)}" class="followup-btn px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-secondary-container/40 text-on-surface text-[12px] font-semibold transition-colors">${escapeHtml(opt.title)} (${escapeHtml(opt.release_year)}, ${escapeHtml(opt.language)})</button>`;
+        }).join("");
+        extraHtml = `<div class="flex flex-wrap gap-2 pl-9">${opts}</div>`;
+      } else if (data.status === "no_matches" && Array.isArray(data.relaxation_suggestions) && data.relaxation_suggestions.length) {
+        const chips = data.relaxation_suggestions.slice(0, 3).map((s) =>
+          `<span class="px-2.5 py-1 rounded-lg bg-surface-container-high text-primary text-[11.5px] font-semibold">${escapeHtml(s.label)} (${s.unlocked_count} matches)</span>`
+        ).join("");
+        extraHtml = `<div class="flex flex-wrap gap-2 pl-9">${chips}</div>`;
+      }
+
+      const cardsHtml = Array.isArray(data.picks) && data.picks.length
+        ? `<div class="flex flex-col gap-3.5">${data.picks.map(renderCard).join("")}</div>`
+        : "";
+
+      wrap.innerHTML = `
+        <div class="flex items-start gap-2.5">
+          <div class="w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center shrink-0 mt-0.5">
+            <span class="material-symbols-outlined text-[16px]">${iconName}</span>
+          </div>
+          <p class="text-[14px] leading-relaxed ${isError ? "text-error font-semibold" : "text-on-surface"}">${escapeHtml(data.message || "")}</p>
+        </div>
+        ${extraHtml}
+        ${cardsHtml}
+      `;
+
+      chatStream.appendChild(wrap);
+      wrap.querySelectorAll(".followup-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          sendQuery(btn.getAttribute("data-followup") || "");
+        });
+      });
+      wrap.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+
+    async function sendQuery(rawText) {
+      const text = rawText.trim();
+      if (!text || isSubmitting) return;
+
+      isSubmitting = true;
+      sendBtn.disabled = true;
+      chatInput.value = "";
+      appendUserBubble(text);
+      const loader = appendLoadingBubble();
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: text,
+            history: conversationHistory.slice(-4)
+          })
+        });
+        const data = await response.json();
+        loader.remove();
+        appendAssistantResponse(data);
+
+        if (data.status && data.status !== "error") {
+          conversationHistory.push({ role: "user", content: text });
+          conversationHistory.push({ role: "assistant", content: data.message || "" });
+        }
+      } catch (err) {
+        loader.remove();
+        appendAssistantResponse({
+          status: "error",
+          message: "Unable to connect to the Movie Buddy server. Please check that the server is running and try again.",
+          picks: []
+        });
+      } finally {
+        isSubmitting = false;
+        sendBtn.disabled = false;
+        chatInput.focus();
+      }
+    }
+
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      sendQuery(chatInput.value);
+    });
+
+    document.querySelectorAll(".example-prompt").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        sendQuery(btn.getAttribute("data-prompt") || "");
+      });
+    });
+
+    newChatBtn.addEventListener("click", () => {
+      conversationHistory = [];
+      chatStream.innerHTML = "";
+      chatInput.value = "";
+      closeFilterModal();
+      chatInput.focus();
+    });
+  </script>
+</body>
+</html>
